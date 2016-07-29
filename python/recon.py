@@ -4,8 +4,10 @@ from subprocess import call
 from github import Github
 
 def googleDork(domain):
+	'''Attempts various google dorks'''
 	site = "site:{}".format(domain)
-	dorks = [] #add dorks
+	#inurl:
+	dorks = ["ext:csv intext:'password'", ] #add dorks
 	for x in dorks:
 		query = site + " " + x
 		rq = requests.get('http://ajax.googleapis.com/ajax/services/search/web?v=1.0&q=' + query)
@@ -16,12 +18,17 @@ def googleDork(domain):
 			print (result['url'])
 
 def subDomainSearch(url):
+	'''Searches for subdomains'''
 	call("dig {} soa".format(url)) #dig SOA url
 	#call("dig @ns.SOA.com %s axfr" %url)
 	call("host -t {}".format(url))
 
 def githubBreach(): #user, password
+	'''Checks for sensitive information improperly uploaded to Github'''
 	#gh = Github(user, password)
+	keywords = ['api', 'key', 'username', 'user', 'uname', 'pw', 'password',
+                'pass', 'email', 'mail', 'credentials', 'credential', 'login',
+				'token', 'secret', 'API', 'instance']
 	while True:
 		userGuess = input("Input an organization or user or a guess: ")
 		try:
@@ -35,6 +42,7 @@ def githubBreach(): #user, password
 			continue
 
 def validURL(url):
+	'''Checks if a URL exists'''
 	req = requests.get(url)
 	if requests.status_code == 200:
 		print("valid URL")
@@ -44,6 +52,7 @@ def validURL(url):
 		return False
 
 def basicDnsInfo(url): #read in a textfile?
+	'''Gathers basic DNS information'''
 	try:
 		call("whois {}".format(url))
 		call("dig {} ANY".format(url))
@@ -62,9 +71,11 @@ def zoneTransfer(url):
 		print(e)
 
 def scanIPRange(start, end):
+	'''Scans an IP range with nmap'''
 	call("nmap {start}-{end}".format(start, end))
 
 def bannerGrab(domain, adv): #add user port input for all cmds not just nmap advanced?
+	'''Attempts a banner grab'''
 	call("nmap -sV {}".format(domain))
 	call("telnet {} 80".format(domain))
 	call("nc -v {} 80".format(domain))
@@ -79,9 +90,10 @@ def bannerGrab(domain, adv): #add user port input for all cmds not just nmap adv
 			print("Invalid")
 
 def safeScan(domain):
+	'''Attempts an nmap safe scan'''
 	call("nmap -sV -sC {}".format(domain))
 
-def main(): #better way to handle user args?
+def main(): #add argument parser
 	userArg = input("Choose url, dns, github, banner, safescan, ip, zone, or all: ")
 	if userArg == "url":
 		userURL = input("Input URL to check: ")
