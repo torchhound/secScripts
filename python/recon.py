@@ -1,13 +1,39 @@
 import requests
 import json
+import argparse
 from subprocess import call
 from github import Github
 
+#add geoip?
+
+def argsParser():
+	parser = argparse.ArgumentParser()
+
+	parser.add_argument("-u", "--url", help = validURL.__doc__ + "\n" + subDomainSearch.__doc__)
+
+	parser.add_argument("-d", "--dns", help = basicDnsInfo.__doc__)
+
+	parser.add_argument("-g", "--github", help = githubBreach.__doc__)
+
+	parser.add_argument("-b", "--banner", help = bannerGrab.__doc__)
+
+	parser.add_argument("-s", "--safescan", help = safeScan.__doc__)
+
+	parser.add_argument("-i", "--ip", help = scanIPRange.__doc__)
+
+	parser.add_argument("-z", "--zone", help = zoneTransfer.__doc__)
+
+	parser.add_argument("-gd", "--googledork", help = googleDork.__doc__)
+
+	parser.add_argument("-a", "--all", help = "Runs all reconnaissance gathering operations on the target")
+
+	return parser.argsParser()
+
 def googleDork(domain):
-	'''Attempts various google dorks'''
+	"""Attempts various google dorks"""
 	site = "site:{}".format(domain)
-	#inurl:
-	dorks = ["ext:csv intext:'password'", ] #add dorks
+	#inurl:, allintext:, allinurl:
+	dorks = ["ext:csv intext:'password'", "inurl:ftp 'password' filetype:xls"] #add dorks
 	for x in dorks:
 		query = site + " " + x
 		rq = requests.get('http://ajax.googleapis.com/ajax/services/search/web?v=1.0&q=' + query)
@@ -18,17 +44,18 @@ def googleDork(domain):
 			print (result['url'])
 
 def subDomainSearch(url):
-	'''Searches for subdomains'''
+	"""Searches for subdomains"""
 	call("dig {} soa".format(url)) #dig SOA url
 	#call("dig @ns.SOA.com %s axfr" %url)
 	call("host -t {}".format(url))
 
 def githubBreach(): #user, password
-	'''Checks for sensitive information improperly uploaded to Github'''
+	"""Checks for sensitive information improperly uploaded to Github""" #add bitbucket and local(cloned) repo support
 	#gh = Github(user, password)
 	keywords = ['api', 'key', 'username', 'user', 'uname', 'pw', 'password',
                 'pass', 'email', 'mail', 'credentials', 'credential', 'login',
-				'token', 'secret', 'API', 'instance']
+				'token', 'secret', 'instance', 'oAuth', 'authToken', '_auth',
+				'_password', '_authToken'] #, '.ssh', '.npmrc', '.muttrc', 'config.json', '.gitconfig', '.netrc' 
 	while True:
 		userGuess = input("Input an organization or user or a guess: ")
 		try:
@@ -42,7 +69,7 @@ def githubBreach(): #user, password
 			continue
 
 def validURL(url):
-	'''Checks if a URL exists'''
+	"""Checks if a URL exists"""
 	req = requests.get(url)
 	if requests.status_code == 200:
 		print("valid URL")
@@ -51,11 +78,12 @@ def validURL(url):
 		print(requests.status_code)
 		return False
 
-def basicDnsInfo(url): #read in a textfile?
-	'''Gathers basic DNS information'''
+def basicDnsInfo(url): #read in a textfile?, whois?
+	"""Gathers basic DNS information"""
 	try:
 		call("whois {}".format(url))
 		call("dig {} ANY".format(url))
+		#call("dig +nocmd txt chaos VERSION.BIND {} +noall +answer".format(dnsServer)) identify bind version
 	except TypeError as e:
 		print(e)
 		call("whois {}".format(url))
@@ -64,6 +92,7 @@ def basicDnsInfo(url): #read in a textfile?
 		print(e)
 
 def zoneTransfer(url):
+	"""Attempts a zone transfer"""
 	try:
 		call("dig {} axfr".format(url))
 		call("host -t axfr {}".format(url))
@@ -71,11 +100,11 @@ def zoneTransfer(url):
 		print(e)
 
 def scanIPRange(start, end):
-	'''Scans an IP range with nmap'''
+	"""Scans an IP range with nmap, takes two inputs"""
 	call("nmap {start}-{end}".format(start, end))
 
 def bannerGrab(domain, adv): #add user port input for all cmds not just nmap advanced?
-	'''Attempts a banner grab'''
+	"""Attempts a banner grab"""
 	call("nmap -sV {}".format(domain))
 	call("telnet {} 80".format(domain))
 	call("nc -v {} 80".format(domain))
@@ -90,7 +119,7 @@ def bannerGrab(domain, adv): #add user port input for all cmds not just nmap adv
 			print("Invalid")
 
 def safeScan(domain):
-	'''Attempts an nmap safe scan'''
+	"""Attempts an nmap safe scan"""
 	call("nmap -sV -sC {}".format(domain))
 
 def main(): #add argument parser
@@ -131,6 +160,7 @@ def main(): #add argument parser
 			githubBreach()
 			basicDnsInfo(userDomainA)
 			subDomain(userDomainA)
+			zoneTransfer(userDomainA)
 		else:
 			print("Invalid Input")
 	else:
