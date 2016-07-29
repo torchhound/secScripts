@@ -1,10 +1,11 @@
-import requests, json
+import requests
+import json
 from subprocess import call
 from github import Github
 
 def googleDork(domain):
-	site = "site:%s" %domain
-	dorks = []
+	site = "site:{}".format(domain)
+	dorks = [] #add dorks
 	for x in dorks:
 		query = site + " " + x
 		rq = requests.get('http://ajax.googleapis.com/ajax/services/search/web?v=1.0&q=' + query)
@@ -13,11 +14,11 @@ def googleDork(domain):
 		for index,result in enumerate(jsonObject['responseData']['results']):
 			print (str(index+1) + ") " + result['titleNoFormatting'])
 			print (result['url'])
-			
+
 def subDomainSearch(url):
-	call("dig %s soa" %url) #dig SOA url
+	call("dig {} soa".format(url)) #dig SOA url
 	#call("dig @ns.SOA.com %s axfr" %url)
-	call("host -t %s" %url)
+	call("host -t {}".format(url))
 
 def githubBreach(): #user, password
 	#gh = Github(user, password)
@@ -26,11 +27,15 @@ def githubBreach(): #user, password
 		try:
 			print(github.MainClass.Github.get_organization(userGuess))
 			print(github.Organization.userGuess.get_repos())
-		except BaseException: #need a better exceptionr
+		except BaseException as e: #need a better exception
+			print(e)
+			continue
+		except Exception as e:
+			print(e)
 			continue
 
 def validURL(url):
-	req = requests.bet(url)
+	req = requests.get(url)
 	if requests.status_code == 200:
 		print("valid URL")
 		return True
@@ -38,43 +43,53 @@ def validURL(url):
 		print(requests.status_code)
 		return False
 
-def dnsInfo(url):
+def basicDnsInfo(url): #read in a textfile?
 	try:
-		call("whois %s" %url)
-		call("dig %s ANY" %url)
-	except TypeError:
-		call("whois %d" %url)
-		call("dig %d ANY" %url)
+		call("whois {}".format(url))
+		call("dig {} ANY".format(url))
+	except TypeError as e:
+		print(e)
+		call("whois {}".format(url))
+		call("dig {} ANY".format(url))
+	except Exception as e:
+		print(e)
+
+def zoneTransfer(url):
+	try:
+		call("dig {} axfr".format(url))
+		call("host -t axfr {}".format(url))
+	except Exception as e:
+		print(e)
 
 def scanIPRange(start, end):
-	call("nmap {start}-{end}".format(start, end)) #format function vs percent
+	call("nmap {start}-{end}".format(start, end))
 
 def bannerGrab(domain, adv): #add user port input for all cmds not just nmap advanced?
-	call("nmap -sV %s" %domain)
-	call("telnet %s 80" %domain)
-	call("nc -v %s 80" %domain) 
+	call("nmap -sV {}".format(domain))
+	call("telnet {} 80".format(domain))
+	call("nc -v {} 80".format(domain))
 	if adv == "y":
 		userPort = input("Choose port: ")
 		userAgression = input("Agressive: y/n ")
 		if userAgression == "y":
-			call("nmap -A -sV --version-intensity 5 -p %d -v --script banner %s" %userPort, domain)
+			call("nmap -A -sV --version-intensity 5 -p {} -v --script banner {}".format(userPort, domain))
 		elif userAgression == "n":
-			call("nmap -sV -p %d -v --script banner %s" %userPort, domain)
+			call("nmap -sV -p {} -v --script banner {}".format(userPort, domain))
 		else:
 			print("Invalid")
-	
+
 def safeScan(domain):
-	call("nmap -sV -sC %s" %domain)
-	
-def main():
-	userArg = input("Choose url, dns, github, banner, safescan, ip, or all: ")
-	if userArg == "url": 
+	call("nmap -sV -sC {}".format(domain))
+
+def main(): #better way to handle user args?
+	userArg = input("Choose url, dns, github, banner, safescan, ip, zone, or all: ")
+	if userArg == "url":
 		userURL = input("Input URL to check: ")
 		validURL(userURL)
 		subDomain(userURL)
 	elif userArg == "dns":
 		userDNS = input("Input URL or IP: ")
-		dnsInfo(userDNS)
+		basicDnsInfo(userDNS)
 	elif userArg == "ip":
 		userIPS = input("Input the complete starting IP address: ")
 		userIPE = input("Input the final quad of the IP address: ")
@@ -90,6 +105,9 @@ def main():
 	elif userArg == "safescan":
 		userDomainSS = input("Input domain to safely scan: ")
 		safeScan(userDomainSS)
+	elif userArg == "zone":
+		userZone = input("Input URL to attempt zone transfer on: ")
+		zoneTransfer(userZone)
 	elif userArg == "all":
 		userDomainA = input("Input domain: ")
 		if validURL(userDomainA) == True: #do this check for other args or superfluous
@@ -99,7 +117,7 @@ def main():
 			userIPEA = input("Input the final quad of the IP address: ")
 			scanIPRange(userIPSA, userIPEA)
 			githubBreach()
-			dnsInfo(userDomainA)
+			basicDnsInfo(userDomainA)
 			subDomain(userDomainA)
 		else:
 			print("Invalid Input")
