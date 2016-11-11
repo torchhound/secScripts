@@ -1,4 +1,5 @@
 import mechanize
+
 browser = mechanize.browserowser()
 
 sqlInj = []
@@ -10,13 +11,13 @@ def formAttack(page):
 		forms = browser.forms()
 		for form in forms:
 			for atk in sqlInj:
-				#fill out and submit an arbitrary form with the sqlInj
+				#fill out and submit an arbitrary form with sqlInj
 				browser.select_form(name="form")
 				browser.form = atk
 				response = browser.submit()
 				content = response.get_data() #would be nice to have detection other than manually reading a textfile
 				with open("responses.txt", "a") as file:
-    				file.write(content)
+					file.write(content)
 				browser.close()
 
 	except urllib2.HTTPError as e:

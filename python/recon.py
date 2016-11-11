@@ -9,25 +9,25 @@ from github import Github
 def argsParser():
 	parser = argparse.ArgumentParser()
 
-	parser.add_argument("-u", "--url", help = validURL.__doc__ + "\n" + subDomainSearch.__doc__)
+	parser.add_argument("-u", "--url", type = str, help = validURL.__doc__ + "\n" + subDomainSearch.__doc__)
 
-	parser.add_argument("-d", "--dns", help = basicDnsInfo.__doc__)
+	parser.add_argument("-d", "--dns", type = str, help = basicDnsInfo.__doc__)
 
-	parser.add_argument("-g", "--github", help = githubBreach.__doc__)
+	parser.add_argument("-g", "--github", type = str, help = githubBreach.__doc__) #need to change githubBreach function
 
-	parser.add_argument("-b", "--banner", help = bannerGrab.__doc__)
+	parser.add_argument("-b", "--banner", type = str, nargs = "+", help = bannerGrab.__doc__)
 
-	parser.add_argument("-s", "--safescan", help = safeScan.__doc__)
+	parser.add_argument("-s", "--safescan", type = str, help = safeScan.__doc__)
 
-	parser.add_argument("-i", "--ip", help = scanIPRange.__doc__)
+	parser.add_argument("-i", "--ip", type = int, help = scanIPRange.__doc__)
 
-	parser.add_argument("-z", "--zone", help = zoneTransfer.__doc__)
+	parser.add_argument("-z", "--zone", type = str, help = zoneTransfer.__doc__)
 
-	parser.add_argument("-gd", "--googledork", help = googleDork.__doc__)
+	parser.add_argument("-gd", "--googledork", type = str, help = googleDork.__doc__)
 
-	parser.add_argument("-a", "--all", help = "Runs all reconnaissance gathering operations on the target")
+	parser.add_argument("-a", "--all", nargs = "?", help = "Runs all reconnaissance gathering operations on the target")
 
-	return parser.argsParser()
+	return parser.parse_args()
 
 def googleDork(domain):
 	"""Attempts various google dorks"""
@@ -122,49 +122,29 @@ def safeScan(domain):
 	"""Attempts an nmap safe scan"""
 	call("nmap -sV -sC {}".format(domain))
 
-def main(): #add argument parser
-	userArg = input("Choose url, dns, github, banner, safescan, ip, zone, or all: ")
-	if userArg == "url":
-		userURL = input("Input URL to check: ")
-		validURL(userURL)
-		subDomain(userURL)
-	elif userArg == "dns":
-		userDNS = input("Input URL or IP: ")
-		basicDnsInfo(userDNS)
-	elif userArg == "ip":
-		userIPS = input("Input the complete starting IP address: ")
-		userIPE = input("Input the final quad of the IP address: ")
-		scanIPRange(userIPS, userIPE)
-	elif userArg == "github":
-		#userGithubU = input("Input github username: ")
-		#userGithubP = input("Input github password: ")
-		githubBreach() #userGithubU, userGithubP
-	elif userArg == "banner":
-		userDomain = input("Input domain to banner grab: ")
-		userAdvA = input("Advanced grab: y/n ")
-		bannerGrab(userDomain, userAdv)
-	elif userArg == "safescan":
-		userDomainSS = input("Input domain to safely scan: ")
-		safeScan(userDomainSS)
-	elif userArg == "zone":
-		userZone = input("Input URL to attempt zone transfer on: ")
-		zoneTransfer(userZone)
-	elif userArg == "all":
-		userDomainA = input("Input domain: ")
-		if validURL(userDomainA) == True: #do this check for other args or superfluous
-			userAdvA = input("Advanced grab: y/n ")
-			bannerGrab(userDomainA, userAdvA)
-			userIPSA = input("Input the complete starting IP address: ")
-			userIPEA = input("Input the final quad of the IP address: ")
-			scanIPRange(userIPSA, userIPEA)
-			githubBreach()
-			basicDnsInfo(userDomainA)
-			subDomain(userDomainA)
-			zoneTransfer(userDomainA)
-		else:
-			print("Invalid Input")
+def main():
+	args = argsParser()
+	if args.a is not None:
+		pass #code
+	if args.g is not None:
+		githubBreach()
+	if args.b is not None:
+		bannerGrab(args.b)
+	if args.s is not None:
+		safeScan(args.s)
+	if args.i is not None:
+		scanIPRange(args.i)
+	if args.z is not None:
+		zoneTransfer(args.z)
+	if args.gd is not None:
+		googleDork(args.gd)
+	if args.d is not None:
+		basicDnsInfo(args.d)
+	if args.u is not None:
+		validURL(args.u)
+		subDomainSearch(args.u)
 	else:
-		return False
+		return False #return universal docstring or help
 
 if __name__ == '__main__':
 	main()
