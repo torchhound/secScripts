@@ -124,23 +124,23 @@ def safeScan(domain):
 
 def main():
 	args = argsParser()
-	if args.a is not None:
+	if args.all is not None:
 		pass #code
-	if args.g is not None:
+	if args.github is not None:
 		githubBreach()
-	if args.b is not None:
+	if args.banner is not None:
 		bannerGrab(args.b)
-	if args.s is not None:
+	if args.safescan is not None:
 		safeScan(args.s)
-	if args.i is not None:
+	if args.ip is not None:
 		scanIPRange(args.i)
-	if args.z is not None:
+	if args.zone is not None:
 		zoneTransfer(args.z)
-	if args.gd is not None:
+	if args.googledork is not None:
 		googleDork(args.gd)
-	if args.d is not None:
+	if args.dns is not None:
 		basicDnsInfo(args.d)
-	if args.u is not None:
+	if args.url is not None:
 		validURL(args.u)
 		subDomainSearch(args.u)
 	else:
